@@ -8,16 +8,24 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/lib/types';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, getCachedData, initialCategories } from '@/lib/cache';
 import { SlidersHorizontal, ChevronRight, X, ArrowUpDown } from 'lucide-react';
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const [category, setCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState<Category | null>(() => {
+    const cats = getCachedData<Category[]>('/api/categories') || initialCategories;
+    return cats.find((c) => c.slug === slug) || null;
+  });
+  const [products, setProducts] = useState<Product[]>(() => {
+    return getCachedData<Product[]>(`/api/products?category=${slug}`) || [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    const prods = getCachedData<Product[]>(`/api/products?category=${slug}`);
+    return !prods || prods.length === 0;
+  });
 
   // Filters state
   const [selectedSize, setSelectedSize] = useState<string | null>(null);

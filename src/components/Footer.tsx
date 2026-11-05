@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
 import { SocialLink } from '@/lib/types';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, getCachedData } from '@/lib/cache';
 import {
   Instagram,
   Facebook,
@@ -22,7 +22,9 @@ import {
 
 export default function Footer() {
   const { settings } = useTheme();
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(() => {
+    return getCachedData<SocialLink[]>('/api/social') || [];
+  });
   const [activeModal, setActiveModal] = useState<'terms' | 'privacy' | 'shipping' | null>(null);
 
   useEffect(() => {

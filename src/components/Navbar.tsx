@@ -9,7 +9,7 @@ import { useCurrency } from './CurrencyContext';
 import { useCart } from './CartContext';
 import { useRole } from './RoleContext';
 import { Category } from '@/lib/types';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, getCachedData, initialCategories } from '@/lib/cache';
 import {
   ShoppingBag,
   Menu,
@@ -32,7 +32,9 @@ export default function Navbar() {
   const { totalItems, setIsCartOpen } = useCart();
   const { user, role, canAccessAdmin, openAuthModal, logout } = useRole();
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>(() => {
+    return getCachedData<Category[]>('/api/categories') || initialCategories;
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 

@@ -12,7 +12,7 @@ import { useCart } from '@/components/CartContext';
 import { useRole } from '@/components/RoleContext';
 import { useTheme } from '@/components/ThemeProvider';
 import { Product } from '@/lib/types';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, getCachedData } from '@/lib/cache';
 import {
   ShoppingBag,
   Truck,
@@ -36,13 +36,23 @@ export default function ProductDetailPage() {
   const { role } = useRole();
   const { settings } = useTheme();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(() => {
+    const single = getCachedData<Product>(`/api/products/${slug}`);
+    if (single) return single;
+    const all = getCachedData<Product[]>('/api/products');
+    return all?.find((p) => p.slug === slug) || null;
+  });
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    const single = getCachedData<Product>(`/api/products/${slug}`);
+    if (single) return false;
+    const all = getCachedData<Product[]>('/api/products');
+    return !all?.some((p) => p.slug === slug);
+  });
   const [addedAnimation, setAddedAnimation] = useState(false);
 
   useEffect(() => {

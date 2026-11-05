@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { useTheme } from '@/components/ThemeProvider';
 import { Product, Category } from '@/lib/types';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, getCachedData, initialCategories } from '@/lib/cache';
 import {
   ArrowRight,
   Sparkles,
@@ -21,11 +21,21 @@ import {
 
 export default function HomePage() {
   const { settings } = useTheme();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>(() => {
+    return getCachedData<Category[]>('/api/categories') || initialCategories;
+  });
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() => {
+    const prods = getCachedData<Product[]>('/api/products');
+    return prods ? prods.filter((p) => p.is_featured) : [];
+  });
+  const [allProducts, setAllProducts] = useState<Product[]>(() => {
+    return getCachedData<Product[]>('/api/products') || [];
+  });
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('todos');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    const prods = getCachedData<Product[]>('/api/products');
+    return !prods || prods.length === 0;
+  });
 
   useEffect(() => {
     async function loadData() {
