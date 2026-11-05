@@ -3,6 +3,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, UserRole } from '@/lib/types';
 
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  country: string;
+  age: number;
+}
+
 interface RoleContextType {
   user: User | null;
   role: UserRole;
@@ -11,9 +20,15 @@ interface RoleContextType {
   setImpersonatedRole: (role: UserRole | null) => void;
   setUser: (user: User | null) => void;
   logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   switchQuickRole: (role: UserRole) => void;
   canAccessAdmin: boolean;
   isSuperAdmin: boolean;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
+  authTab: 'login' | 'register';
+  openAuthModal: (tab?: 'login' | 'register') => void;
 }
 
 const defaultDevUser: User = {
@@ -22,6 +37,8 @@ const defaultDevUser: User = {
   email: 'carlos@demo.com',
   role: 'programador',
   phone: '+58 412 0000000',
+  country: 'Venezuela',
+  age: 26,
 };
 
 const RoleContext = createContext<RoleContextType>({
@@ -32,14 +49,22 @@ const RoleContext = createContext<RoleContextType>({
   setImpersonatedRole: () => {},
   setUser: () => {},
   logout: () => {},
+  login: async () => ({ success: false }),
+  register: async () => ({ success: false }),
   switchQuickRole: () => {},
   canAccessAdmin: true,
   isSuperAdmin: true,
+  isAuthModalOpen: false,
+  setIsAuthModalOpen: () => {},
+  authTab: 'login',
+  openAuthModal: () => {},
 });
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(defaultDevUser);
   const [impersonatedRole, setImpersonatedRoleState] = useState<UserRole | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,6 +85,62 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, []);
+
+  const openAuthModal = (tab: 'login' | 'register' = 'login') => {
+    setAuthTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Error al iniciar sesión' };
+      }
+
+      setUser(data);
+      setImpersonatedRole(null);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('demo_user', JSON.stringify(data));
+        localStorage.removeItem('demo_impersonate');
+      }
+      setIsAuthModalOpen(false);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Error de conexión' };
+    }
+  };
+
+  const register = async (formData: RegisterData) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Error al registrarse' };
+      }
+
+      const newUser = data.user;
+      setUser(newUser);
+      setImpersonatedRole(null);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('demo_user', JSON.stringify(newUser));
+        localStorage.removeItem('demo_impersonate');
+      }
+      setIsAuthModalOpen(false);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Error de conexión' };
+    }
+  };
 
   const setImpersonatedRole = (r: UserRole | null) => {
     setImpersonatedRoleState(r);
@@ -92,6 +173,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         email: 'admin@demo.com',
         role: 'admin',
         phone: '+58 412 1111111',
+        country: 'Venezuela',
+        age: 32,
       };
     } else if (r === 'revendedor') {
       mockUser = {
@@ -100,6 +183,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         email: 'revendedor@demo.com',
         role: 'revendedor',
         phone: '+58 414 2222222',
+        country: 'Colombia',
+        age: 29,
       };
     } else {
       mockUser = {
@@ -108,6 +193,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         email: 'maria@gmail.com',
         role: 'cliente',
         phone: '+58 416 3333333',
+        country: 'Venezuela',
+        age: 24,
       };
     }
 
@@ -134,9 +221,15 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         setImpersonatedRole,
         setUser,
         logout,
+        login,
+        register,
         switchQuickRole,
         canAccessAdmin,
         isSuperAdmin,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        authTab,
+        openAuthModal,
       }}
     >
       {children}
@@ -147,4 +240,3 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 export function useRole() {
   return useContext(RoleContext);
 }
-

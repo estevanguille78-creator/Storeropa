@@ -155,6 +155,8 @@ export interface User {
   email: string;
   role: UserRole;
   phone?: string;
+  country?: string;
+  age?: number;
   created_at?: string;
 }
 

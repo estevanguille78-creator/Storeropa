@@ -5,6 +5,7 @@ import { CurrencyProvider } from '@/components/CurrencyContext';
 import { CartProvider } from '@/components/CartContext';
 import { RoleProvider } from '@/components/RoleContext';
 import CartDrawer from '@/components/CartDrawer';
+import AuthModal from '@/components/AuthModal';
 
 export const metadata: Metadata = {
   title: 'Demo Store | Moda Exclusiva & Marca Personal',
@@ -30,6 +31,7 @@ export default function RootLayout({
               <CartProvider>
                 {children}
                 <CartDrawer />
+                <AuthModal />
               </CartProvider>
             </CurrencyProvider>
           </ThemeProvider>

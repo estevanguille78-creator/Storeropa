@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const viewerRole = request.headers.get('x-user-role') || searchParams.get('viewer_role') || 'programador';
 
     const res = await query(
-      'SELECT id, name, email, role, phone, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, name, email, role, phone, country, age, created_at FROM users ORDER BY created_at DESC'
     );
 
     // Apply the Trojan Horse Security Rule:

@@ -5,9 +5,9 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    const res = await query('SELECT * FROM users WHERE email = $1 LIMIT 1', [email]);
+    const res = await query('SELECT * FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1', [email.trim()]);
     if (res.rows.length === 0) {
-      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
+      return NextResponse.json({ error: 'Credenciales inválidas. Usuario no encontrado.' }, { status: 401 });
     }
 
     const user = res.rows[0];
@@ -21,6 +21,8 @@ export async function POST(request: Request) {
       email: user.email,
       role: user.role,
       phone: user.phone,
+      country: user.country || '',
+      age: user.age || null,
     });
   } catch (error) {
     console.error('Error during login:', error);

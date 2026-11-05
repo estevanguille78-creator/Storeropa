@@ -19,6 +19,13 @@ import {
   Sparkles,
   Eye,
   ShieldCheck,
+  User,
+  LogIn,
+  UserPlus,
+  LogOut,
+  Globe,
+  Calendar,
+  Phone,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -26,12 +33,22 @@ export default function Navbar() {
   const { settings } = useTheme();
   const { currencies, currentCurrency, setCurrency } = useCurrency();
   const { totalItems, setIsCartOpen } = useCart();
-  const { role, realRole, impersonatedRole, setImpersonatedRole, switchQuickRole, isSuperAdmin } =
-    useRole();
+  const {
+    user,
+    role,
+    realRole,
+    impersonatedRole,
+    setImpersonatedRole,
+    switchQuickRole,
+    canAccessAdmin,
+    openAuthModal,
+    logout,
+  } = useRole();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -209,17 +226,111 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Actions: Admin Button & Cart */}
-          <div className="flex items-center gap-3">
-            {/* Sala de Control Link */}
-            <Link
-              href="/sala-de-control"
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-button text-xs font-semibold transition-colors"
-              title="Panel de Administración y Personalización"
-            >
-              <Sliders className="w-3.5 h-3.5 text-primary" />
-              <span className="hidden sm:inline">Sala de Control</span>
-            </Link>
+          {/* Actions: Auth, Admin, Cart */}
+          <div className="flex items-center gap-2.5">
+            {/* AUTH SECTION (INICIAR SESIÓN / REGISTRARSE) */}
+            {user ? (
+              /* User logged in dropdown */
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-button bg-gray-100 hover:bg-gray-200/80 text-gray-800 text-xs font-semibold transition-colors"
+                >
+                  <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-[10px]">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline font-bold truncate max-w-[100px]">{user.name.split(' ')[0]}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+
+                {showUserDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 z-50 text-xs text-gray-700 animate-in fade-in slide-in-from-top-2">
+                    <div className="pb-3 border-b border-gray-100">
+                      <strong className="block text-gray-900 font-bold text-sm">{user.name}</strong>
+                      <span className="text-[11px] text-gray-500 block truncate">{user.email}</span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                          {role}
+                        </span>
+                        {user.country && (
+                          <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                            <Globe className="w-3 h-3 text-gray-400" />
+                            {user.country}
+                          </span>
+                        )}
+                        {user.age && (
+                          <span className="text-[11px] text-gray-500">
+                            • {user.age} años
+                          </span>
+                        )}
+                      </div>
+                      {user.phone && (
+                        <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-1 font-mono">
+                          <Phone className="w-3 h-3 text-emerald-500" />
+                          <span>{user.phone}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="py-2 space-y-1">
+                      {canAccessAdmin && (
+                        <Link
+                          href="/sala-de-control"
+                          onClick={() => setShowUserDropdown(false)}
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-xl text-gray-800 hover:bg-slate-100 font-medium transition-colors"
+                        >
+                          <Sliders className="w-4 h-4 text-primary" />
+                          <span>Sala de Control</span>
+                        </Link>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setShowUserDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-red-600 hover:bg-red-50 font-medium transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Cerrar Sesión</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* User not logged in: Iniciar Sesión / Registrarse */
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => openAuthModal('login')}
+                  className="px-3 py-2 text-xs font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-button transition-colors flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Iniciar Sesión</span>
+                </button>
+                <button
+                  onClick={() => openAuthModal('register')}
+                  className="px-3 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-button shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Registrarse</span>
+                </button>
+              </div>
+            )}
+
+            {/* Sala de Control Link for Admins */}
+            {canAccessAdmin && (
+              <Link
+                href="/sala-de-control"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-button text-xs font-semibold transition-colors"
+                title="Panel de Administración y Personalización"
+              >
+                <Sliders className="w-3.5 h-3.5 text-primary" />
+                <span>Sala de Control</span>
+              </Link>
+            )}
 
             {/* Shopping Bag Button */}
             <button
@@ -265,19 +376,61 @@ export default function Navbar() {
                 {cat.name}
               </Link>
             ))}
-            <div className="pt-2 border-t border-gray-100">
-              <Link
-                href="/sala-de-control"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center py-2.5 bg-slate-900 text-white rounded-button font-medium text-sm"
-              >
-                Acceder a Sala de Control
-              </Link>
-            </div>
+
+            {/* Mobile auth buttons */}
+            {!user ? (
+              <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openAuthModal('login');
+                  }}
+                  className="py-2.5 px-3 rounded-button text-xs font-semibold text-gray-800 bg-gray-100 text-center"
+                >
+                  Iniciar Sesión
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openAuthModal('register');
+                  }}
+                  className="py-2.5 px-3 rounded-button text-xs font-bold text-slate-950 bg-amber-500 text-center"
+                >
+                  Registrarse
+                </button>
+              </div>
+            ) : (
+              <div className="pt-3 border-t border-gray-100 space-y-2">
+                <div className="px-3 py-2 bg-gray-50 rounded-xl text-xs">
+                  <strong className="block text-gray-900">{user.name}</strong>
+                  <span className="text-gray-500">{user.email}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+
+            {canAccessAdmin && (
+              <div className="pt-2 border-t border-gray-100">
+                <Link
+                  href="/sala-de-control"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-center py-2.5 bg-slate-900 text-white rounded-button font-medium text-sm"
+                >
+                  Acceder a Sala de Control
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </header>
     </>
   );
 }
-

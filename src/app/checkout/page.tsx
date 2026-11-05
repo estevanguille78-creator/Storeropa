@@ -28,7 +28,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const { currentCurrency, convertPrice, formatPrice, currencies, setCurrency } = useCurrency();
-  const { user } = useRole();
+  const { user, openAuthModal } = useRole();
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedMethodId, setSelectedMethodId] = useState<string>('');
@@ -45,6 +45,17 @@ export default function CheckoutPage() {
     city: 'Caracas',
     notes: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     fetch('/api/payments')
@@ -208,6 +219,18 @@ export default function CheckoutPage() {
           <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Contact, Shipping, Payment selection */}
             <div className="lg:col-span-7 space-y-6">
+              {!user && (
+                <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-center justify-between shadow-sm">
+                  <span>¿Ya tienes una cuenta registrada? Inicia sesión para autocompletar tus datos.</span>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal('login')}
+                    className="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-600 transition-colors shadow-sm ml-2 flex-shrink-0"
+                  >
+                    Iniciar Sesión
+                  </button>
+                </div>
+              )}
               {/* Step 1: Contact & Shipping */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 pb-3 border-b border-gray-100">

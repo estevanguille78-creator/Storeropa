@@ -245,7 +245,9 @@ export default function UsuariosPage() {
               <tr>
                 <th className="pb-3.5">Nombre</th>
                 <th className="pb-3.5">Correo Electrónico</th>
-                <th className="pb-3.5">Teléfono</th>
+                <th className="pb-3.5">WhatsApp</th>
+                <th className="pb-3.5">País</th>
+                <th className="pb-3.5">Edad</th>
                 <th className="pb-3.5">Rol / Jerarquía</th>
                 <th className="pb-3.5">Fecha Registro</th>
                 <th className="pb-3.5 text-right">Acción</th>
@@ -263,7 +265,9 @@ export default function UsuariosPage() {
                     )}
                   </td>
                   <td className="py-3.5 text-slate-300 font-mono">{u.email}</td>
-                  <td className="py-3.5 text-slate-400">{u.phone || 'N/A'}</td>
+                  <td className="py-3.5 text-slate-400 font-mono">{u.phone || 'N/A'}</td>
+                  <td className="py-3.5 text-slate-300">{u.country || '-'}</td>
+                  <td className="py-3.5 text-slate-300">{u.age ? `${u.age} años` : '-'}</td>
                   <td className="py-3.5">
                     <span
                       className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
