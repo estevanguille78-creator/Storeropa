@@ -168,12 +168,12 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     if (r === 'programador') {
       mockUser = {
         id: 'usr_super_01',
-        name: 'Carlos Dev (Programador)',
-        email: 'carlos@demo.com',
+        name: 'Carlos La Rosa (Programador)',
+        email: 'larosagranado1111@gmail.com',
         role: 'programador',
-        phone: '+58 412 0000000',
+        phone: '04248901572',
         country: 'Venezuela',
-        age: 26,
+        age: 24,
       };
     } else if (r === 'admin') {
       mockUser = {

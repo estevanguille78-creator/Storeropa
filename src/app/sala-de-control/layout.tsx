@@ -98,7 +98,7 @@ export default function SalaDeControlLayout({ children }: { children: React.Reac
           <div className="mt-6 pt-5 border-t border-slate-800/80 text-[11px] text-slate-500">
             <p className="font-semibold text-slate-400 mb-1">Cuentas Autorizadas Demo:</p>
             <p>Admin: <code className="text-amber-400 font-mono">admin@demo.com</code></p>
-            <p>Programador: <code className="text-amber-400 font-mono">carlos@demo.com</code></p>
+            <p>Programador: <code className="text-amber-400 font-mono">larosagranado1111@gmail.com</code></p>
           </div>
         </div>
       </div>
