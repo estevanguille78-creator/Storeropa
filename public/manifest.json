@@ -1,0 +1,21 @@
+{
+  "name": "Demo Store - Sala de Control",
+  "short_name": "DemoStore",
+  "description": "Tienda de ropa, calzado y marca personal con panel de administración",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=192&q=80",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=512&q=80",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
