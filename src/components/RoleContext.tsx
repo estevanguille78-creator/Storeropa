@@ -69,7 +69,22 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       } else if (savedUser && isExplicit) {
         try {
-          setUser(JSON.parse(savedUser));
+          const parsed = JSON.parse(savedUser);
+          setUser(parsed);
+
+          // Sincronizar rol en tiempo real con la base de datos Supabase
+          if (parsed && parsed.email) {
+            fetch(`/api/auth/me?email=${encodeURIComponent(parsed.email)}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((fresh) => {
+                if (fresh && fresh.role) {
+                  const updatedUser = { ...parsed, ...fresh };
+                  setUser(updatedUser);
+                  localStorage.setItem('demo_user', JSON.stringify(updatedUser));
+                }
+              })
+              .catch(() => {});
+          }
         } catch {
           setUser(null);
         }
