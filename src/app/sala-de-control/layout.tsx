@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '@/components/RoleContext';
@@ -19,13 +19,29 @@ import {
   Eye,
   LogOut,
   Sparkles,
+  Lock,
+  LogIn,
+  ArrowLeft,
 } from 'lucide-react';
 
 export default function SalaDeControlLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { role, realRole, impersonatedRole, setImpersonatedRole, isSuperAdmin, switchQuickRole } =
-    useRole();
+  const {
+    user,
+    role,
+    realRole,
+    impersonatedRole,
+    setImpersonatedRole,
+    isSuperAdmin,
+    canAccessAdmin,
+    openAuthModal,
+  } = useRole();
   const { settings } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { label: 'Resumen', href: '/sala-de-control', icon: LayoutDashboard },
@@ -36,6 +52,58 @@ export default function SalaDeControlLayout({ children }: { children: React.Reac
     { label: 'Usuarios & Seguridad', href: '/sala-de-control/usuarios', icon: Users },
     { label: 'Redes & Footer', href: '/sala-de-control/redes-footer', icon: Share2 },
   ];
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+        <div className="animate-pulse flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-amber-500 animate-bounce"></div>
+          <span className="text-xs uppercase tracking-widest font-semibold">Cargando Sala de Control...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ACCESO DENEGADO SI NO ES ADMIN O PROGRAMADOR
+  if (!canAccessAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 text-amber-400">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Acceso Exclusivo a Sala de Control</h2>
+          <p className="text-slate-400 text-sm leading-relaxed mb-6">
+            Esta área de gestión está reservada únicamente para el Administrador del negocio y el Programador.
+          </p>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => openAuthModal('login')}
+              className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Iniciar Sesión como Administrador</span>
+            </button>
+
+            <Link
+              href="/"
+              className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver a la Tienda Pública</span>
+            </Link>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-slate-800/80 text-[11px] text-slate-500">
+            <p className="font-semibold text-slate-400 mb-1">Cuentas Autorizadas Demo:</p>
+            <p>Admin: <code className="text-amber-400 font-mono">admin@demo.com</code></p>
+            <p>Programador: <code className="text-amber-400 font-mono">carlos@demo.com</code></p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
@@ -144,4 +212,3 @@ export default function SalaDeControlLayout({ children }: { children: React.Reac
     </div>
   );
 }
-

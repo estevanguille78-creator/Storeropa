@@ -31,20 +31,10 @@ interface RoleContextType {
   openAuthModal: (tab?: 'login' | 'register') => void;
 }
 
-const defaultDevUser: User = {
-  id: 'usr_super_01',
-  name: 'Carlos Dev (Programador)',
-  email: 'carlos@demo.com',
-  role: 'programador',
-  phone: '+58 412 0000000',
-  country: 'Venezuela',
-  age: 26,
-};
-
 const RoleContext = createContext<RoleContextType>({
-  user: defaultDevUser,
-  role: 'programador',
-  realRole: 'programador',
+  user: null,
+  role: 'cliente',
+  realRole: 'cliente',
   impersonatedRole: null,
   setImpersonatedRole: () => {},
   setUser: () => {},
@@ -52,8 +42,8 @@ const RoleContext = createContext<RoleContextType>({
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
   switchQuickRole: () => {},
-  canAccessAdmin: true,
-  isSuperAdmin: true,
+  canAccessAdmin: false,
+  isSuperAdmin: false,
   isAuthModalOpen: false,
   setIsAuthModalOpen: () => {},
   authTab: 'login',
@@ -61,7 +51,7 @@ const RoleContext = createContext<RoleContextType>({
 });
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(defaultDevUser);
+  const [user, setUser] = useState<User | null>(null);
   const [impersonatedRole, setImpersonatedRoleState] = useState<UserRole | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
@@ -69,17 +59,25 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedUser = localStorage.getItem('demo_user');
-      const savedImpersonation = localStorage.getItem('demo_impersonate');
-      if (savedUser) {
+      const isExplicit = localStorage.getItem('user_explicitly_logged_in');
+
+      // Clear legacy automatic dev user so user always starts as an unauthenticated guest
+      if (savedUser && (!isExplicit || savedUser.includes('usr_super_01'))) {
+        localStorage.removeItem('demo_user');
+        localStorage.removeItem('demo_impersonate');
+        localStorage.removeItem('user_explicitly_logged_in');
+        setUser(null);
+      } else if (savedUser && isExplicit) {
         try {
           setUser(JSON.parse(savedUser));
         } catch {
-          setUser(defaultDevUser);
+          setUser(null);
         }
       } else {
-        localStorage.setItem('demo_user', JSON.stringify(defaultDevUser));
+        setUser(null);
       }
 
+      const savedImpersonation = localStorage.getItem('demo_impersonate');
       if (savedImpersonation) {
         setImpersonatedRoleState(savedImpersonation as UserRole);
       }
@@ -107,6 +105,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       setImpersonatedRole(null);
       if (typeof window !== 'undefined') {
         localStorage.setItem('demo_user', JSON.stringify(data));
+        localStorage.setItem('user_explicitly_logged_in', 'true');
         localStorage.removeItem('demo_impersonate');
       }
       setIsAuthModalOpen(false);
@@ -133,6 +132,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       setImpersonatedRole(null);
       if (typeof window !== 'undefined') {
         localStorage.setItem('demo_user', JSON.stringify(newUser));
+        localStorage.setItem('user_explicitly_logged_in', 'true');
         localStorage.removeItem('demo_impersonate');
       }
       setIsAuthModalOpen(false);
@@ -159,13 +159,22 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('demo_user');
       localStorage.removeItem('demo_impersonate');
+      localStorage.removeItem('user_explicitly_logged_in');
     }
   };
 
   const switchQuickRole = (r: UserRole) => {
     let mockUser: User;
     if (r === 'programador') {
-      mockUser = defaultDevUser;
+      mockUser = {
+        id: 'usr_super_01',
+        name: 'Carlos Dev (Programador)',
+        email: 'carlos@demo.com',
+        role: 'programador',
+        phone: '+58 412 0000000',
+        country: 'Venezuela',
+        age: 26,
+      };
     } else if (r === 'admin') {
       mockUser = {
         id: 'usr_admin_01',
@@ -202,14 +211,16 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     setImpersonatedRole(null);
     if (typeof window !== 'undefined') {
       localStorage.setItem('demo_user', JSON.stringify(mockUser));
+      localStorage.setItem('user_explicitly_logged_in', 'true');
       localStorage.removeItem('demo_impersonate');
     }
   };
 
   const realRole: UserRole = user?.role || 'cliente';
   const effectiveRole: UserRole = impersonatedRole || realRole;
-  const canAccessAdmin = effectiveRole === 'programador' || effectiveRole === 'admin';
-  const isSuperAdmin = realRole === 'programador';
+  // STRICT CHECK: canAccessAdmin is TRUE only if an authenticated user exists AND is 'admin' or 'programador'
+  const canAccessAdmin = !!user && (effectiveRole === 'programador' || effectiveRole === 'admin');
+  const isSuperAdmin = !!user && realRole === 'programador';
 
   return (
     <RoleContext.Provider
