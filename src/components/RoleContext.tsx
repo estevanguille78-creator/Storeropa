@@ -56,34 +56,55 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
+  // Función de sincronización en tiempo real contra Supabase
+  const syncUserFromDatabase = async (email: string) => {
+    if (!email) return;
+    try {
+      const res = await fetch(`/api/auth/me?email=${encodeURIComponent(email)}&_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (res.ok) {
+        const fresh = await res.json();
+        if (fresh && fresh.role) {
+          setUser((prev) => {
+            if (!prev) return fresh;
+            if (prev.role !== fresh.role || prev.name !== fresh.name) {
+              const updated = { ...prev, ...fresh };
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('demo_user', JSON.stringify(updated));
+                localStorage.setItem('user_explicitly_logged_in', 'true');
+              }
+              return updated;
+            }
+            return prev;
+          });
+        }
+      }
+    } catch {
+      // Ignorar errores de red temporales
+    }
+  };
+
+  // 1. Carga inicial e instantánea al recargar la página (F5)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedUser = localStorage.getItem('demo_user');
       const isExplicit = localStorage.getItem('user_explicitly_logged_in');
 
-      // Clear legacy automatic dev user so user always starts as an unauthenticated guest
+      // Limpiar usuarios de prueba antiguos
       if (savedUser && (!isExplicit || savedUser.includes('usr_super_01'))) {
         localStorage.removeItem('demo_user');
         localStorage.removeItem('demo_impersonate');
         localStorage.removeItem('user_explicitly_logged_in');
         setUser(null);
-      } else if (savedUser && isExplicit) {
+      } else if (savedUser) {
         try {
           const parsed = JSON.parse(savedUser);
           setUser(parsed);
-
-          // Sincronizar rol en tiempo real con la base de datos Supabase
+          // Consulta directa al backend para verificar rol en vivo
           if (parsed && parsed.email) {
-            fetch(`/api/auth/me?email=${encodeURIComponent(parsed.email)}`)
-              .then((r) => (r.ok ? r.json() : null))
-              .then((fresh) => {
-                if (fresh && fresh.role) {
-                  const updatedUser = { ...parsed, ...fresh };
-                  setUser(updatedUser);
-                  localStorage.setItem('demo_user', JSON.stringify(updatedUser));
-                }
-              })
-              .catch(() => {});
+            syncUserFromDatabase(parsed.email);
           }
         } catch {
           setUser(null);
@@ -98,6 +119,34 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, []);
+
+  // 2. Sincronización en segundo plano: cada 4 segundos y al volver a la pestaña
+  useEffect(() => {
+    if (!user?.email || typeof window === 'undefined') return;
+
+    const email = user.email;
+
+    // Intervalo periódico en segundo plano (cada 4s)
+    const interval = setInterval(() => {
+      syncUserFromDatabase(email);
+    }, 4000);
+
+    // Al enfocar la ventana o volver a la pestaña
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        syncUserFromDatabase(email);
+      }
+    };
+
+    window.addEventListener('focus', onVisibilityChange);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [user?.email]);
 
   const openAuthModal = (tab: 'login' | 'register' = 'login') => {
     setAuthTab(tab);
