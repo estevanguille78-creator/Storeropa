@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { SocialLink, StoreSettings } from '@/lib/types';
+import { invalidateCache } from '@/lib/cache';
 import {
   Share2,
   Plus,
@@ -48,6 +49,7 @@ export default function RedesFooterPage() {
 
   const loadData = async () => {
     try {
+      invalidateCache('/api/social');
       const res = await fetch('/api/social');
       if (res.ok) {
         setSocialLinks(await res.json());

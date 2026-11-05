@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCurrency } from '@/components/CurrencyContext';
 import { Product, Category, AttributeGroup, AttributeValue } from '@/lib/types';
+import { invalidateCache } from '@/lib/cache';
 import {
   Layers,
   Plus,
@@ -62,6 +63,7 @@ export default function CatalogoPage() {
 
   const loadAll = async () => {
     try {
+      invalidateCache();
       setLoading(true);
       const [catRes, attrRes, prodRes] = await Promise.all([
         fetch('/api/categories'),

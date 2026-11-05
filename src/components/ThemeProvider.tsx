@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { StoreSettings } from '@/lib/types';
+import { fetchWithCache, invalidateCache } from '@/lib/cache';
 
 interface ThemeContextType {
   settings: StoreSettings | null;
@@ -19,11 +20,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchSettings = async () => {
+  const fetchSettings = async (forceRefresh = false) => {
     try {
-      const res = await fetch('/api/settings');
-      if (res.ok) {
-        const data = await res.json();
+      if (forceRefresh) {
+        invalidateCache('/api/settings');
+      }
+      const data = await fetchWithCache<StoreSettings>('/api/settings', 60000);
+      if (data) {
         setSettings(data);
         applyTheme(data);
       }
@@ -94,7 +97,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ settings, loading, refreshSettings: fetchSettings }}>
+    <ThemeContext.Provider value={{ settings, loading, refreshSettings: () => fetchSettings(true) }}>
       {children}
     </ThemeContext.Provider>
   );

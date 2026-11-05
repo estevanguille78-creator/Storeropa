@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Currency } from '@/lib/types';
+import { fetchWithCache, invalidateCache } from '@/lib/cache';
 
 interface CurrencyContextType {
   currencies: Currency[];
@@ -37,11 +38,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currentCurrency, setCurrentCurrency] = useState<Currency>(defaultUSD);
   const [loading, setLoading] = useState(true);
 
-  const fetchCurrencies = async () => {
+  const fetchCurrencies = async (forceRefresh = false) => {
     try {
-      const res = await fetch('/api/currencies');
-      if (res.ok) {
-        const data: Currency[] = await res.json();
+      if (forceRefresh) {
+        invalidateCache('/api/currencies');
+      }
+      const data = await fetchWithCache<Currency[]>('/api/currencies', 60000);
+      if (Array.isArray(data)) {
         const activeList = data.filter((c) => c.is_active);
         setCurrencies(activeList);
 

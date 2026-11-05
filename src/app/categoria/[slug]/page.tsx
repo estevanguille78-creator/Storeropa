@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { Product, Category } from '@/lib/types';
+import { fetchWithCache } from '@/lib/cache';
 import { SlidersHorizontal, ChevronRight, X, ArrowUpDown } from 'lucide-react';
 
 export default function CategoryPage() {
@@ -28,20 +29,17 @@ export default function CategoryPage() {
   useEffect(() => {
     async function loadCategoryAndProducts() {
       try {
-        setLoading(true);
-        const [catRes, prodRes] = await Promise.all([
-          fetch('/api/categories'),
-          fetch(`/api/products?category=${slug}`),
+        const [cats, prods] = await Promise.all([
+          fetchWithCache<Category[]>('/api/categories'),
+          fetchWithCache<Product[]>(`/api/products?category=${slug}`),
         ]);
 
-        if (catRes.ok) {
-          const cats: Category[] = await catRes.json();
+        if (Array.isArray(cats)) {
           const current = cats.find((c) => c.slug === slug);
           setCategory(current || null);
         }
 
-        if (prodRes.ok) {
-          const prods: Product[] = await prodRes.json();
+        if (Array.isArray(prods)) {
           setProducts(prods);
         }
       } catch (err) {

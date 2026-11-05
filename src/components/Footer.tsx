@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
 import { SocialLink } from '@/lib/types';
+import { fetchWithCache } from '@/lib/cache';
 import {
   Instagram,
   Facebook,
@@ -25,8 +26,7 @@ export default function Footer() {
   const [activeModal, setActiveModal] = useState<'terms' | 'privacy' | 'shipping' | null>(null);
 
   useEffect(() => {
-    fetch('/api/social')
-      .then((res) => res.json())
+    fetchWithCache<SocialLink[]>('/api/social')
       .then((data) => {
         if (Array.isArray(data)) {
           setSocialLinks(data.filter((s) => s.is_active));

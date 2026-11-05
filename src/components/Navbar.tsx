@@ -9,6 +9,7 @@ import { useCurrency } from './CurrencyContext';
 import { useCart } from './CartContext';
 import { useRole } from './RoleContext';
 import { Category } from '@/lib/types';
+import { fetchWithCache } from '@/lib/cache';
 import {
   ShoppingBag,
   Menu,
@@ -36,8 +37,7 @@ export default function Navbar() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
-    fetch('/api/categories')
-      .then((res) => res.json())
+    fetchWithCache<Category[]>('/api/categories')
       .then((data) => {
         if (Array.isArray(data)) {
           setCategories(data.filter((c) => c.is_active));
@@ -106,6 +106,7 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
             <Link
               href="/"
+              prefetch={true}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname === '/' ? 'text-primary font-bold bg-gray-100/80' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
@@ -118,6 +119,7 @@ export default function Navbar() {
               return (
                 <Link
                   key={cat.id}
+                  prefetch={true}
                   href={`/categoria/${cat.slug}`}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     active ? 'text-primary font-bold bg-gray-100/80' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'

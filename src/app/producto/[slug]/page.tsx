@@ -12,6 +12,7 @@ import { useCart } from '@/components/CartContext';
 import { useRole } from '@/components/RoleContext';
 import { useTheme } from '@/components/ThemeProvider';
 import { Product } from '@/lib/types';
+import { fetchWithCache } from '@/lib/cache';
 import {
   ShoppingBag,
   Truck,
@@ -47,10 +48,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function loadProduct() {
       try {
-        setLoading(true);
-        const res = await fetch(`/api/products/${slug}`);
-        if (res.ok) {
-          const data: Product = await res.json();
+        const data = await fetchWithCache<Product>(`/api/products/${slug}`);
+        if (data) {
           setProduct(data);
 
           // Default selected size and color
@@ -63,9 +62,8 @@ export default function ProductDetailPage() {
 
           // Fetch related products
           if (data.category_slug) {
-            const relRes = await fetch(`/api/products?category=${data.category_slug}`);
-            if (relRes.ok) {
-              const relData: Product[] = await relRes.json();
+            const relData = await fetchWithCache<Product[]>(`/api/products?category=${data.category_slug}`);
+            if (Array.isArray(relData)) {
               setRelatedProducts(relData.filter((p) => p.id !== data.id).slice(0, 4));
             }
           }

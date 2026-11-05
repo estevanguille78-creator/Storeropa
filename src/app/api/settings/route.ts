@@ -7,7 +7,11 @@ export async function GET() {
     if (res.rows.length === 0) {
       return NextResponse.json({ error: 'Configuración no encontrada' }, { status: 404 });
     }
-    return NextResponse.json(res.rows[0]);
+    return NextResponse.json(res.rows[0], {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error('Error fetching settings:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
@@ -104,4 +108,3 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Error al actualizar configuración' }, { status: 500 });
   }
 }
-

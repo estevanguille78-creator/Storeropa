@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { useTheme } from '@/components/ThemeProvider';
 import { Product, Category } from '@/lib/types';
+import { fetchWithCache } from '@/lib/cache';
 import {
   ArrowRight,
   Sparkles,
@@ -29,18 +30,16 @@ export default function HomePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [catRes, prodRes] = await Promise.all([
-          fetch('/api/categories'),
-          fetch('/api/products'),
+        const [cats, prods] = await Promise.all([
+          fetchWithCache<Category[]>('/api/categories'),
+          fetchWithCache<Product[]>('/api/products'),
         ]);
 
-        if (catRes.ok) {
-          const cats: Category[] = await catRes.json();
+        if (Array.isArray(cats)) {
           setCategories(cats.filter((c) => c.is_active));
         }
 
-        if (prodRes.ok) {
-          const prods: Product[] = await prodRes.json();
+        if (Array.isArray(prods)) {
           setAllProducts(prods);
           setFeaturedProducts(prods.filter((p) => p.is_featured));
         }

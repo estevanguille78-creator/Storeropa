@@ -38,7 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="group relative bg-white rounded-2xl border border-gray-100/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden">
       {/* Image container */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
-        <Link href={`/producto/${product.slug}`} className="block w-full h-full">
+        <Link href={`/producto/${product.slug}`} prefetch={true} className="block w-full h-full">
           <Image
             src={imageSrc}
             alt={product.name}
@@ -73,6 +73,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
           <Link
             href={`/producto/${product.slug}`}
+            prefetch={true}
             className="p-2.5 bg-white/95 hover:bg-white text-gray-900 rounded-button shadow-lg font-medium text-xs flex items-center justify-center backdrop-blur-sm transition-transform active:scale-95"
             title="Ver detalles"
           >
@@ -89,7 +90,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.category_name}
             </span>
           )}
-          <Link href={`/producto/${product.slug}`}>
+          <Link href={`/producto/${product.slug}`} prefetch={true}>
             <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 hover:text-secondary transition-colors">
               {product.name}
             </h3>

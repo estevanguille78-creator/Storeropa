@@ -34,7 +34,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json(res.rows[0]);
+    return NextResponse.json(res.rows[0], {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json({ error: 'Error al obtener producto' }, { status: 500 });
@@ -120,4 +124,3 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     return NextResponse.json({ error: 'Error al eliminar producto' }, { status: 500 });
   }
 }
-

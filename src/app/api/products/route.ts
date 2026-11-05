@@ -41,7 +41,11 @@ export async function GET(request: Request) {
     sql += ` ORDER BY p.id DESC`;
 
     const res = await query(sql, params);
-    return NextResponse.json(res.rows);
+    return NextResponse.json(res.rows, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Error al obtener productos' }, { status: 500 });
@@ -72,40 +76,41 @@ export async function POST(request: Request) {
       name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '') +
-        '-' +
-        Date.now().toString().slice(-4);
+        .replace(/^-+|-+$/g, '');
 
     const res = await query(
       `
       INSERT INTO products (
-        name, slug, description, category_id, price, reseller_price, compare_at_price,
-        images, badge, is_featured, is_active, stock, attributes
+        name, slug, description, category_id, price, reseller_price,
+        compare_at_price, images, badge, is_featured, is_active, stock, attributes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13::jsonb)
       RETURNING *;
       `,
       [
         name,
         safeSlug,
         description || '',
-        category_id || null,
-        price,
+        category_id,
+        price || 0,
         reseller_price || null,
         compare_at_price || null,
-        JSON.stringify(images || []),
+        images && images.length > 0 ? JSON.stringify(images) : JSON.stringify(['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80']),
         badge || null,
         is_featured ?? false,
         is_active ?? true,
-        stock ?? 10,
-        JSON.stringify(attributes || {}),
+        stock || 0,
+        attributes ? JSON.stringify(attributes) : JSON.stringify({}),
       ]
     );
 
     return NextResponse.json(res.rows[0], { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating product:', error);
+    const err = error as { code?: string };
+    if (err.code === '23505') {
+      return NextResponse.json({ error: 'Ya existe un producto con este slug/código' }, { status: 400 });
+    }
     return NextResponse.json({ error: 'Error al crear producto' }, { status: 500 });
   }
 }
-
