@@ -133,9 +133,9 @@ export default function HomePage() {
 
               {/* Right Column: Hero Visual with Creator & Signature Item */}
               <div className="lg:col-span-5 relative">
-                <div className="relative mx-auto max-w-md lg:max-w-none">
+                <div className="relative mx-auto max-w-md w-full">
                   {/* Outer Frame with glow */}
-                  <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 aspect-[4/5] bg-slate-800">
+                  <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 w-full h-[460px] sm:h-[500px] bg-slate-800">
                     <Image
                       src={profileImg}
                       alt={storeName}

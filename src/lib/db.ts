@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 
 const connectionString =
   process.env.DATABASE_URL ||
-  'postgresql://postgres.kifdurptvbpfmivjjmmh:tiendaderopa15demo25@aws-0-us-east-2.pooler.supabase.com:5432/postgres';
+  'postgresql://postgres.kifdurptvbpfmivjjmmh:tiendaderopa15demo25@aws-0-us-east-2.pooler.supabase.com:6543/postgres';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -15,8 +15,8 @@ if (!global.__dbPool) {
   global.__dbPool = new Pool({
     connectionString,
     ssl: { rejectUnauthorized: false },
-    max: 10,
-    idleTimeoutMillis: 30000,
+    max: 3,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000,
   });
 }
